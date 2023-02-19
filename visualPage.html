@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="style.css">
+    <title>29th January Test Page</title>
+    <script src="color_test.js" defer></script>
+</head>
+<body>
+    <h1 class="title">WIF File Visualiser</h1>
+    <div class="column_left">
+        
+            <body id="canvas" onload='colors()'>
+        
+                <canvas class="myCanvas" style="float:center">
+                    <p>Your browser is unable to view the weaving pattern. You are still able to download it.</p>
+                  </canvas>
+            </body>
+      
+
+    </div>
+    <div class="column_right">
+        <div class="button-group">
+            <a role=button class="upload_inner" id="upload" onclick="location.href='uploadPage.html';">
+                <i class="material-icons" style="font-size:48px;color:white;">file_upload</i>
+                Upload</a>
+
+            <a role=button class="button" id="download">
+                <i class="material-icons" style="font-size:48px;color:white;">file_download</i>
+                Download</a>
+
+            <a role=button class="button" id="edit">
+                <i class="material-icons" style="font-size:44px;color:white;">mode_edit</i>
+                Edit Color</a>
+        </div>
+        <div id="myModal" class="modal">
+
+            <!-- Modal content -->
+            <div class="modal-content">
+              <span class="close">&times;</span>
+              <p> Select Color to Change: </p>
+              <input type="color" id='colorWeft' value="#ff0000" />
+              <input type="color" id='colorWarp' value="#ff0000" />
+              <a role=button class="button" id="applyColor">Apply Color Changes</a>
+            </div>
+          
+          </div>
+    </div>
+   
+
+
+</body>
+</html>
