@@ -16,7 +16,7 @@
     <div class="upload_outer">
         <label for="file_upload">
         <div class="upload_inner">
-            <i class="material-icons" style="font-size:48px;color:white;">file_upload</i> Upload WIF File.
+            <i class="material-icons" style="font-size:48px;color:rgb(236, 236, 236);">file_upload</i> Upload WIF File
             <!--<img src="folder_icon.png" alt="File icon" style="float:left;width:50px;height:50px;"> Upload WIF File.
             <i class="material-icons">file_upload</i>
          <i class="material-icons" style="font-size:60px;color:red;">cloud</i>
@@ -24,7 +24,7 @@
         </div>
     </label>
     <br>
-    <span id="file_chosen">No file chosen</span>
+    <p class="uploadmsg">File Uploaded: <span id="file_chosen">No file uploaded</span> </p>
     </div>
     <div class="invis_file">
         <input id='file_upload' type='file' accept='.wif' onchange='readFile(this)'>
@@ -34,7 +34,7 @@
 
 
 
-    <button onclick="document.location='visualPage.html'">view visual</button>
+    <a role=button class="viewBtn" id='viewBtn'>View Visualisation</button>
 
 
 </body>

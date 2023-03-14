@@ -10,6 +10,8 @@
 </head>
 <body>
     <h1 class="title">WIF File Visualiser</h1>
+
+    <h3 class="instructionVisual">Please Refresh page after changing window size</h3>
     <div class="column_left">
         
             <body id="canvas" onload='colors()'>
@@ -17,15 +19,17 @@
                 <canvas class="myCanvas" style="float:center">
                     <p>Your browser is unable to view the weaving pattern. You are still able to download it.</p>
                   </canvas>
+                  <canvas id='blank' style='display:none'></canvas>
             </body>
-      
+
+            
 
     </div>
     <div class="column_right">
         <div class="button-group">
-            <a role=button class="upload_inner" id="upload" onclick="location.href='uploadPage.html';">
+            <a role=button class="button" id="upload" onclick="location.href='uploadPage.html';">
                 <i class="material-icons" style="font-size:48px;color:white;">file_upload</i>
-                Upload</a>
+                View other WIF</a>
 
             <a role=button class="button" id="download">
                 <i class="material-icons" style="font-size:48px;color:white;">file_download</i>
@@ -40,16 +44,15 @@
             <!-- Modal content -->
             <div class="modal-content">
               <span class="close">&times;</span>
-              <p> Select Color to Change: </p>
+              <p class="text"> Select Color to Change: </p>
               <input type="color" id='colorWeft' value="#ff0000" />
               <input type="color" id='colorWarp' value="#ff0000" />
-              <a role=button class="button" id="applyColor">Apply Color Changes</a>
+              <a role=button class="button_apply" id="applyColor">Apply Color Changes</a>
             </div>
           
-          </div>
+        </div>
+       
     </div>
-   
-
 
 </body>
 </html>

@@ -2,8 +2,24 @@ const file_upload = document.getElementById('file_upload');
 
 const fileChosen = document.getElementById('file_chosen');
 
-actualBtn.addEventListener('change', function(){
+const viewBtn = document.getElementById("viewBtn");
+var fileUploaded = false;
+
+
+
+
+
+//catch error here
+file_upload.addEventListener('change', function(){
   fileChosen.textContent = this.files[0].name
+  viewBtn.className = "viewBtnTrue";
+  fileUploaded = true;
+})
+
+viewBtn.addEventListener('click', function(){
+    if (fileUploaded){
+        window.location = 'visualPage.html'
+    }
 })
 
 var weft_color;
@@ -42,6 +58,8 @@ function splitFile(input) {
     var threading = new Array;
     var tieup = new Array;
     var treadling = new Array;
+    var liftplan = new Array;
+    var isLiftplan = false;
 
     const file = (input).split(/\r?\n/);
 
@@ -127,8 +145,15 @@ function splitFile(input) {
         }
     }
 
-  
+    if (file.indexOf('[LIFTPLAN]') != -1) {
 
+        isLiftplan = true;
+        index = file.indexOf('[LIFTPLAN]') + 1
+        while (file[index].includes('=')) {
+            liftplan.push(file[index])
+            index++;
+        }
+    }
 
     //NOW GET COLOURS??
     var weft_color_digit;
@@ -143,7 +168,7 @@ function splitFile(input) {
     for (x in weft) {
         if (weft[x].includes('Color')) {
             weft_color_digit = (weft[x].split('='))[1] 
-        }
+        } 
     }
 
    
@@ -151,9 +176,16 @@ function splitFile(input) {
     weft_color = (color_table[(weft_color_digit-1)].split('='))[1]
     warp_color = (color_table[(warp_color_digit-1)].split('='))[1]
 
+    if (isLiftplan) {
+        localStorage.setItem("liftplan", JSON.stringify(liftplan));
+    } else {
+        localStorage.setItem("treadling", JSON.stringify(treadling));
+        localStorage.setItem("tieup", JSON.stringify(tieup));
+    }
+
     localStorage.setItem("threading", JSON.stringify(threading));
-    localStorage.setItem("treadling", JSON.stringify(treadling));
-    localStorage.setItem("tieup", JSON.stringify(tieup));
+    localStorage.setItem("isLiftplan", isLiftplan);
+    
     localStorage.setItem("weft_color", weft_color);
     localStorage.setItem("warp_color", warp_color);
 
@@ -161,8 +193,11 @@ function splitFile(input) {
 }
 
 function colors() {
+   
     warp_color = localStorage.getItem("warp_color");
     weft_color = localStorage.getItem("weft_color");
+    
+    
 
 
     warp = warp_color.split(',')
@@ -171,9 +206,12 @@ function colors() {
 
     warp_rgb = warp.map(rgb)
     weft_rgb = weft.map(rgb)
+    
 
     warp_hex = warp_rgb.map(rgb2hex)
+
     weft_hex = weft_rgb.map(rgb2hex)
+
 
 
     function rgb(string) {
@@ -184,11 +222,13 @@ function colors() {
     weft_color = "#" + `${weft_hex[0]}${weft_hex[1]}${weft_hex[2]}`;
     warp_color = "#" + `${warp_hex[0]}${warp_hex[1]}${warp_hex[2]}`;
 
+
     display()
 
 }
 
 function rgb2hex(num) {
+    
     var rgbDict = {
         10: "A",
         11: "B",
@@ -202,18 +242,17 @@ function rgb2hex(num) {
       first = Math.floor(num/16)
       remainder = (num/16) - first
       second = Math.floor(remainder*16)
-
-      //alert("done the calcs. First num is... " + first + "   Second is.... "+ second)
+      
 
       if (first > 9){
         first = rgbDict[first]
       }
       if (second > 9){
-        second = rgb[second]
+        // I just changed this from dict to rgbDICT
+        second = rgbDict[second]
       }
       const both = `${first}${second}`;
 
-      
       return both
 
 
@@ -226,11 +265,30 @@ function display() {
     const width = canvas.width = window.innerWidth;
     const height = canvas.height = window.innerHeight;
     const ctx = canvas.getContext("2d");
+    var treadling = new Array;
+    var tieup = new Array;
+    var liftplan = new Array;
+    
+  
+
+    var isLiftplan = localStorage.getItem("isLiftplan");
+    
+
+
+    if (isLiftplan == true) {
+
+        liftplan = JSON.parse(localStorage.getItem("liftplan"));
+
+
+    } else {
+        treadling = JSON.parse(localStorage.getItem("treadling"));
+        tieup = JSON.parse(localStorage.getItem("tieup"));
+    }
+    
 
 
     const threading = JSON.parse(localStorage.getItem("threading"));
-    const treadling = JSON.parse(localStorage.getItem("treadling"));
-    const tieup = JSON.parse(localStorage.getItem("tieup"));
+    
    
    
     ctx.strokeStyle = "black";
@@ -241,56 +299,97 @@ function display() {
         }
     } 
     */
-    
-    reg = Math.min((Math.floor((width*0.5)/threading.length)), (Math.floor((width*0.5)/treadling.length)))
+    var reg = 0;
+    if (isLiftplan == true) {
+  
+        reg = Math.min((Math.floor((width*0.5)/threading.length)), (Math.floor((width*0.5)/liftplan.length)))
+
+    } else {
+        reg = Math.min((Math.floor((width*0.5)/threading.length)), (Math.floor((width*0.5)/treadling.length)))
+    }
 
     for (x in threading) { //loop through threading
         thread_split = threading[x].split('=')
         thread = thread_split[1]
        
         tieup_set = []
-        for (y in tieup) {
+
+        if (isLiftplan == true) { 
+         
+            for (y in liftplan) {
+         
            
-            tieup_split = tieup[y].split('=')
-            tie_up_array = tieup_split[1].split(',')
+                liftplan_split = liftplan[y].split('=')
+                liftplan_array = liftplan_split[1].split(',')
+                
+                    if (liftplan_array.includes(thread)) {
+                        
+                        ctx.fillStyle = weft_color;
+                        ctx.fillRect(((threading.length - thread_split[0])-1) * reg, (liftplan_split[0]-1) * reg, reg, reg);
+                    }
+                }
+
+        } else {
             
-            if (tie_up_array.includes(thread)) {
+           
+            
+            for (y in tieup) {
+           
+                tieup_split = tieup[y].split('=')
+                tie_up_array = tieup_split[1].split(',')
                 
-                tieup_set.push(tieup_split[0]) 
+                    if (tie_up_array.includes(thread)) {
+                        tieup_set.push(tieup_split[0]) 
+                    }
+                }
                 
+    
+                for (z in treadling) { //can treadling include more than one digit??? or just one?? investigate.
+                    
+                    tread_split = treadling[z].split('=')
+                    tread = tread_split[1]
+                    if (tieup_set.includes(tread)) {
+                        //ctx.rect((thread_split[0]-1) * 50, (tread_split[0]-1) * 50, 50, 50);
+                        //ctx.fillStyle = 'rgb(' + warp_rgb[0] + ', ' + warp_rgb[1] + ', ' + warp_rgb[2] + ')';
+                        
+                        ctx.fillStyle = weft_color;
+                        ctx.fillRect(((threading.length - thread_split[0])-1) * reg, (tread_split[0]-1) * reg, reg, reg);
+                        //ctx.fillStyle = 'rgb(0, 0, 249)';
+                        
+                    } else {
+                      
+                        ctx.fillStyle = warp_color;
+                        ctx.fillRect(((threading.length - thread_split[0])-1) * reg, (tread_split[0]-1) * reg, reg, reg);
+                        //ctx.fillStyle = 'rgb(0, 0, 249)';
+                        
+                    }
+                }
+            
+           
             }
         }
-        for (z in treadling) { //can treadling include more than one digit??? or just one?? investigate.
-            tread_split = treadling[z].split('=')
-            tread = tread_split[1]
-            if (tieup_set.includes(tread)) {
-                //ctx.rect((thread_split[0]-1) * 50, (tread_split[0]-1) * 50, 50, 50);
-                //ctx.fillStyle = 'rgb(' + warp_rgb[0] + ', ' + warp_rgb[1] + ', ' + warp_rgb[2] + ')';
-                ctx.fillStyle = weft_color;
-                ctx.fillRect((thread_split[0]-1) * reg, (tread_split[0]-1) * reg, reg, reg);
-                //ctx.fillStyle = 'rgb(0, 0, 249)';
-                
-            } else {
-                ctx.fillStyle = warp_color;
-                ctx.fillRect((thread_split[0]-1) * reg, (tread_split[0]-1) * reg, reg, reg);
-                //ctx.fillStyle = 'rgb(0, 0, 249)';
-                
-            }
-        }
-        
+       
+        if(canvas.toDataURL() == document.getElementById('blank').toDataURL()) {
+            alert('It is blank');
+        } 
       
        /* NEXT STEP: CLEAN CODE, LOOK AT 6 SHAFT TWILL HEART FILE AND THE WARP/WEFT COLOR SECTIONS. THESE DONATE HOW 
        THE COLORS CHANGE AND IS THE NEXT IMPORTANT IMPLEMENTATION STEP.
        */
+
+
+
+
     
-    }
+    
+    
 
 
     document.getElementById("download").addEventListener("click", function() {
-            var dataURL = canvas.toDataURL();
-            this.href = dataURL;
-            this.download = "WIFImage.png";
-        })
+        var dataURL = canvas.toDataURL();
+        this.href = dataURL;
+        this.download = "WIFImage.png";
+    })
 
 
     
@@ -304,48 +403,46 @@ function display() {
 
 
     // Get the modal
-var modal = document.getElementById("myModal");
-var colorInputWeft = document.getElementById('colorWeft')
-var colorInputWarp = document.getElementById('colorWarp')
+    var modal = document.getElementById("myModal");
+    var colorInputWeft = document.getElementById('colorWeft')
+    var colorInputWarp = document.getElementById('colorWarp')
 
-colorInputWeft.value = weft_color;
-colorInputWarp.value = warp_color;
+    colorInputWeft.value = weft_color;
+    colorInputWarp.value = warp_color;
 
 
 // Get the button that opens the modal
-var btn = document.getElementById("edit");
-var applyBtn = document.getElementById("applyColor");
+    var btn = document.getElementById("edit");
+    var applyBtn = document.getElementById("applyColor");
 
 // Get the <span> element that closes the modal
-var span = document.getElementsByClassName("close")[0];
+    var span = document.getElementsByClassName("close")[0];
 
 // When the user clicks on the button, open the modal
-btn.onclick = function() {
-  modal.style.display = "block";
-}
+    btn.onclick = function() {
 
-applyBtn.onclick = function() {
-    weft_color = colorInputWeft.value
-    warp_color = colorInputWarp.value
-    self.display()
-    modal.style.display = "none";
-}
+        modal.style.display = "block";
+    }
+
+    applyBtn.onclick = function() {
+        weft_color = colorInputWeft.value
+        warp_color = colorInputWarp.value
+        self.display()
+        modal.style.display = "none";
+    }
 
 // When the user clicks on <span> (x), close the modal
-span.onclick = function() {
-    colorInputWarp.value = weft_color;
-    colorInputWeft.value = warp_color;
-    modal.style.display = "none";
-}
+    span.onclick = function() {
+        colorInputWarp.value = weft_color;
+        colorInputWeft.value = warp_color;
+        modal.style.display = "none";
+    }
 
 // When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
-  }
+    window.onclick = function(event) {
+        if (event.target == modal) {
+        modal.style.display = "none";
+    }
+    }
 }
-    //YOUVE MADE IT TOO COMPLICATED- ALL YOU NEED TO DO IS HAVE A BUTTON- WHEN PRESSED IT RE-RUNS CANVAS FUNCTION WITH
-       // THE NEW COLOUR SAvED IN colorInput.value;
-      
-
-}
+    
