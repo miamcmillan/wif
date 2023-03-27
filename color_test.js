@@ -7,10 +7,9 @@ var fileUploaded = false;
 
 
 
-
-
 //catch error here
 file_upload.addEventListener('change', function(){
+
   fileChosen.textContent = this.files[0].name
   viewBtn.className = "viewBtnTrue";
   fileUploaded = true;
@@ -45,10 +44,7 @@ function readFile(input) {
 
 
 function splitFile(input) {
-    // contents: COLOR PALETTE, TEXT, WEAVING, WARP, WEFT, COLOR TABLE, THREADING, TIEUP, TREADLING
-    // maybe loop through checking contents and adding them to variables as they come.
-
-    var contents = new Array;
+ 
     var color_palette = new Array;
     var text = new Array;
     var weaving = new Array;
@@ -60,24 +56,14 @@ function splitFile(input) {
     var treadling = new Array;
     var liftplan = new Array;
     var isLiftplan = false;
-
-    const file = (input).split(/\r?\n/);
-
-    if (file[0] != "[WIF]") {
-      
-    }
-
-    // SHOULD ADD ERROR HANDLING IF SOME OF THE BELOW COMPONENTS DO NOT EXIST???
-
-    if (file.indexOf('[CONTENTS]') != -1) {
-        index = file.indexOf('[CONTENTS]')
-        while (file[index].charAt(0) != "[") {
-            contents.push(file[index])
-            index++;
-        }
-    }
+    var warp_color_list = new Array;
+    var weft_color_list = new Array;
+    var multiple_warp = false;
+    var multiple_weft = false;
 
     
+
+    const file = (input).split(/\r?\n/);
 
     if (file.indexOf('[COLOR PALETTE]') != -1) {
         index = file.indexOf('[COLOR PALETTE]') + 1
@@ -88,11 +74,6 @@ function splitFile(input) {
         }
     }
   
-
-    if (file.indexOf('[TEXT]') != -1) {
-        //DO WE ACC NEED THIS???
-    }
-
     if (file.indexOf('[WEAVING]') != -1) {
         index = file.indexOf('[WEAVING]') + 1
         while (file[index].includes('=')) {
@@ -155,6 +136,28 @@ function splitFile(input) {
         }
     }
 
+
+    
+
+    if (file.indexOf('[WARP COLORS]') != -1) {
+        index = file.indexOf('[WARP COLORS]') + 1
+        while (file[index].includes('=')) {
+            warp_color_list.push(file[index])
+            multiple_warp = true;
+            index++;     
+        }  
+    }
+
+    if (file.indexOf('[WEFT COLORS]') != -1) {
+        index = file.indexOf('[WEFT COLORS]') + 1
+        while (file[index].includes('=')) {    
+            weft_color_list.push(file[index])
+            multiple_weft = true;
+            index++;
+            
+        }
+    }
+
     //NOW GET COLOURS??
     var weft_color_digit;
     var warp_color_digit;
@@ -171,11 +174,77 @@ function splitFile(input) {
         } 
     }
 
-   
+
+
+    //BELOW CODE IS IF WIF HAS MULTIPLE COLORS (WARP COLORS OR WEFT COLORS)
+    warp_colors_list_split = new Array;
+    weft_colors_list_split = new Array;
+
 
     weft_color = (color_table[(weft_color_digit-1)].split('='))[1]
     warp_color = (color_table[(warp_color_digit-1)].split('='))[1]
 
+ 
+    
+    if (warp_color_list.length > 0) {
+        multiple_warp = true;
+        x = 1 
+        y = 0
+        while (x < threading.length) {
+            warp_temp = (warp_color_list[y].split('='))
+            if (warp_temp[0] == (x)) {
+                warp_split = warp_temp[1]
+                temp = (color_table[(warp_split-1)].split('='))[1]
+                y ++
+            } else {
+                temp = warp_color
+            }
+            x++
+            warp_colors_list_split.push(temp)
+        }
+
+        localStorage.setItem("warp_color_list", JSON.stringify(warp_colors_list_split));
+    }
+
+   //it is not entering below !!!!!
+
+    if (weft_color_list.length > 0) {
+        
+        multiple_weft = true;
+        x = 1 
+        y = 0
+       
+        if (isLiftplan) {
+            comparitor = liftplan.length
+        } else {
+            comparitor = treadling.length
+        }
+        while (x < comparitor) {
+
+           
+            weft_temp = (weft_color_list[y].split('='))
+
+            if (weft_temp[0] == (x)) {
+           
+                weft_split = weft_temp[1]
+     
+                temp = (color_table[(weft_split-1)].split('='))[1]
+            
+                y ++
+            } else {
+                temp = weft_color
+            }
+            x++
+            
+            weft_colors_list_split.push(temp)
+        }
+
+        localStorage.setItem("weft_color_list", JSON.stringify(weft_colors_list_split));
+    }
+
+    
+
+  
     if (isLiftplan) {
         localStorage.setItem("liftplan", JSON.stringify(liftplan));
     } else {
@@ -185,46 +254,65 @@ function splitFile(input) {
 
     localStorage.setItem("threading", JSON.stringify(threading));
     localStorage.setItem("isLiftplan", isLiftplan);
+    localStorage.setItem("isWarpColors", multiple_warp);
+    localStorage.setItem("isWeftColors", multiple_weft);
+
     
     localStorage.setItem("weft_color", weft_color);
     localStorage.setItem("warp_color", warp_color);
 
-    
+    colors()
+   
 }
 
 function colors() {
-   
+ 
     warp_color = localStorage.getItem("warp_color");
     weft_color = localStorage.getItem("weft_color");
-    
-    
-
-
-    warp = warp_color.split(',')
-    weft = weft_color.split(',')
-
-
-    warp_rgb = warp.map(rgb)
-    weft_rgb = weft.map(rgb)
-    
-
-    warp_hex = warp_rgb.map(rgb2hex)
-
-    weft_hex = weft_rgb.map(rgb2hex)
+    multiple_warp = localStorage.getItem("isWarpColors");
+    multiple_weft = localStorage.getItem("isWeftColors");
+    warp_color_list_updated = new Array;
+    weft_color_list_updated = new Array;
 
 
 
-    function rgb(string) {
-        digit = parseInt(string)
-        return Math.floor(digit/4)
+    if (multiple_warp == "true") {
+       
+        const warp_colors_list = JSON.parse(localStorage.getItem("warp_color_list"));
+        for (x in warp_colors_list) {    
+            warp_color_list_updated.push(color_individual(warp_colors_list[x]))
+        }     
+    }
+    if (multiple_weft == "true") {
+       
+        const weft_colors_list = JSON.parse(localStorage.getItem("weft_color_list"));
+        for (x in weft_colors_list) {    
+            weft_color_list_updated.push(color_individual(weft_colors_list[x]))
+        }     
     }
 
-    weft_color = "#" + `${weft_hex[0]}${weft_hex[1]}${weft_hex[2]}`;
-    warp_color = "#" + `${warp_hex[0]}${warp_hex[1]}${warp_hex[2]}`;
+    function color_individual(color) {
+        color_split = color.split(',')
+        
+        color_rgb = color_split.map(rgb)
+        color_hex = color_rgb.map(rgb2hex)
 
 
+        function rgb(string) {
+            digit = parseInt(string)
+            return Math.floor(digit/4)
+        }
+        
+        format = "#" + `${color_hex[0]}${color_hex[1]}${color_hex[2]}`;
+        
+        return format
+
+    }
+
+    warp_color = color_individual(warp_color)
+    weft_color = color_individual(weft_color)
+   
     display()
-
 }
 
 function rgb2hex(num) {
@@ -238,28 +326,25 @@ function rgb2hex(num) {
         15: "F"
       };
       
-    
       first = Math.floor(num/16)
       remainder = (num/16) - first
       second = Math.floor(remainder*16)
       
-
       if (first > 9){
         first = rgbDict[first]
       }
       if (second > 9){
-        // I just changed this from dict to rgbDICT
         second = rgbDict[second]
       }
       const both = `${first}${second}`;
 
       return both
-
-
 }
 
 
 function display() {
+
+    var count = 0;
 
     const canvas = document.querySelector(".myCanvas");
     const width = canvas.width = window.innerWidth;
@@ -269,38 +354,23 @@ function display() {
     var tieup = new Array;
     var liftplan = new Array;
     
-  
-
     var isLiftplan = localStorage.getItem("isLiftplan");
-    
 
-
-    if (isLiftplan == true) {
+    if (isLiftplan == "true") {
 
         liftplan = JSON.parse(localStorage.getItem("liftplan"));
-
 
     } else {
         treadling = JSON.parse(localStorage.getItem("treadling"));
         tieup = JSON.parse(localStorage.getItem("tieup"));
     }
-    
-
 
     const threading = JSON.parse(localStorage.getItem("threading"));
-    
-   
-   
+       
     ctx.strokeStyle = "black";
 
-    /*for (let x=0; x<threading.length; x++) {
-        for(let y=0; y<treadling.length; y++){
-            ctx.strokeRect( x * 50, y * 50, 50, 50);
-        }
-    } 
-    */
     var reg = 0;
-    if (isLiftplan == true) {
+    if (isLiftplan == "true") {
   
         reg = Math.min((Math.floor((width*0.5)/threading.length)), (Math.floor((width*0.5)/liftplan.length)))
 
@@ -308,31 +378,55 @@ function display() {
         reg = Math.min((Math.floor((width*0.5)/threading.length)), (Math.floor((width*0.5)/treadling.length)))
     }
 
-    for (x in threading) { //loop through threading
+    for (x in threading) { 
+        //alert("new threading")
         thread_split = threading[x].split('=')
         thread = thread_split[1]
        
         tieup_set = []
 
-        if (isLiftplan == true) { 
+        if (isLiftplan == "true") { 
          
             for (y in liftplan) {
+         
+                //alert("new liftplan")
          
            
                 liftplan_split = liftplan[y].split('=')
                 liftplan_array = liftplan_split[1].split(',')
                 
+                
                     if (liftplan_array.includes(thread)) {
+                        //alert("weft color")
                         
+                        ctx.fillStyle = warp_color;
+                        ctx.fillRect(((threading.length - thread_split[0])-1) * reg, (liftplan_split[0]-1) * reg, reg, reg);
+                    } else {
+                        //alert("warp color")
                         ctx.fillStyle = weft_color;
                         ctx.fillRect(((threading.length - thread_split[0])-1) * reg, (liftplan_split[0]-1) * reg, reg, reg);
                     }
+
+                    if (multiple_warp == "true") { 
+                        if (y < warp_color_list_updated.length) {
+                            warp_color = warp_color_list_updated[y]
+                        } 
+                    }
+                    
                 }
+                if (multiple_weft == "true") { 
+                    
+    
+                    if (x < weft_color_list_updated.length) {
+           
+                        weft_color = weft_color_list_updated[x]
+                    } 
+                }
+                
+             
 
         } else {
-            
-           
-            
+                     
             for (y in tieup) {
            
                 tieup_split = tieup[y].split('=')
@@ -344,47 +438,33 @@ function display() {
                 }
                 
     
-                for (z in treadling) { //can treadling include more than one digit??? or just one?? investigate.
+                for (z in treadling) { 
                     
                     tread_split = treadling[z].split('=')
                     tread = tread_split[1]
                     if (tieup_set.includes(tread)) {
-                        //ctx.rect((thread_split[0]-1) * 50, (tread_split[0]-1) * 50, 50, 50);
-                        //ctx.fillStyle = 'rgb(' + warp_rgb[0] + ', ' + warp_rgb[1] + ', ' + warp_rgb[2] + ')';
                         
-                        ctx.fillStyle = weft_color;
+                        ctx.fillStyle = warp_color;
                         ctx.fillRect(((threading.length - thread_split[0])-1) * reg, (tread_split[0]-1) * reg, reg, reg);
-                        //ctx.fillStyle = 'rgb(0, 0, 249)';
                         
                     } else {
                       
-                        ctx.fillStyle = warp_color;
+                        ctx.fillStyle = weft_color;
                         ctx.fillRect(((threading.length - thread_split[0])-1) * reg, (tread_split[0]-1) * reg, reg, reg);
-                        //ctx.fillStyle = 'rgb(0, 0, 249)';
-                        
+                       
                     }
-                }
-            
-           
+                    if (multiple_warp == "true") { 
+                        if (count < warp_color_list_updated.length) {
+                            warp_color = warp_color_list_updated[count]
+                        } 
+                    }
+                }                      
             }
+            
+            count ++
+
         }
-       
-        if(canvas.toDataURL() == document.getElementById('blank').toDataURL()) {
-            alert('It is blank');
-        } 
-      
-       /* NEXT STEP: CLEAN CODE, LOOK AT 6 SHAFT TWILL HEART FILE AND THE WARP/WEFT COLOR SECTIONS. THESE DONATE HOW 
-       THE COLORS CHANGE AND IS THE NEXT IMPORTANT IMPLEMENTATION STEP.
-       */
-
-
-
-
-    
-    
-    
-
-
+     
     document.getElementById("download").addEventListener("click", function() {
         var dataURL = canvas.toDataURL();
         this.href = dataURL;
@@ -392,17 +472,8 @@ function display() {
     })
 
 
-    
+    //below code is all for edit color modal.
 
-
-      
-    //document.getElementById("edit").addEventListener("click", function() {
-      //  colorInput = document.getElementById("color");
-       // weft_color = colorInput.value
-    //})
-
-
-    // Get the modal
     var modal = document.getElementById("myModal");
     var colorInputWeft = document.getElementById('colorWeft')
     var colorInputWarp = document.getElementById('colorWarp')
@@ -411,16 +482,14 @@ function display() {
     colorInputWarp.value = warp_color;
 
 
-// Get the button that opens the modal
     var btn = document.getElementById("edit");
     var applyBtn = document.getElementById("applyColor");
 
-// Get the <span> element that closes the modal
+
     var span = document.getElementsByClassName("close")[0];
 
-// When the user clicks on the button, open the modal
-    btn.onclick = function() {
 
+    btn.onclick = function() {
         modal.style.display = "block";
     }
 
@@ -431,18 +500,24 @@ function display() {
         modal.style.display = "none";
     }
 
-// When the user clicks on <span> (x), close the modal
+
     span.onclick = function() {
         colorInputWarp.value = weft_color;
         colorInputWeft.value = warp_color;
         modal.style.display = "none";
     }
 
-// When the user clicks anywhere outside of the modal, close it
     window.onclick = function(event) {
         if (event.target == modal) {
         modal.style.display = "none";
     }
     }
+
+
+    window.addEventListener('resize', function(event){
+        this.location.reload();
+      });
+
+
 }
     
