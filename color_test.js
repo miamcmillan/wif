@@ -252,10 +252,26 @@ function splitFile(input) {
         localStorage.setItem("tieup", JSON.stringify(tieup));
     }
 
+    
+
+    //get range
+   
+    for (line in color_palette) {
+        line_split = color_palette[line].split("=")
+        if (line_split[0] == 'Range'){
+            range = line_split[1]
+        }
+    }
+    
+   
+
+
     localStorage.setItem("threading", JSON.stringify(threading));
     localStorage.setItem("isLiftplan", isLiftplan);
     localStorage.setItem("isWarpColors", multiple_warp);
     localStorage.setItem("isWeftColors", multiple_weft);
+
+    localStorage.setItem("colorRange", range);
 
     
     localStorage.setItem("weft_color", weft_color);
@@ -271,6 +287,7 @@ function colors() {
     weft_color = localStorage.getItem("weft_color");
     multiple_warp = localStorage.getItem("isWarpColors");
     multiple_weft = localStorage.getItem("isWeftColors");
+    color_range = localStorage.getItem("colorRange");
     warp_color_list_updated = new Array;
     weft_color_list_updated = new Array;
 
@@ -293,9 +310,18 @@ function colors() {
 
     function color_individual(color) {
         color_split = color.split(',')
+        range_split = color_range.split(',')
         
-        color_rgb = color_split.map(rgb)
+        if (range_split[1] == '999') {
+       
+            color_rgb = color_split.map(rgb)
+        } else {
+           
+            color_rgb = color_split
+        }
         color_hex = color_rgb.map(rgb2hex)
+
+      
 
 
         function rgb(string) {
